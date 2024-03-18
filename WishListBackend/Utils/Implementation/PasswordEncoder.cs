@@ -1,12 +1,13 @@
 ﻿using System.Text;
 using System.Security.Cryptography;
+using WishListBackend.Other.Interfaces;
 
-namespace WishListBackend.Other
+namespace WishListBackend.Other.Implementation
 {
     public class PasswordEncoder : IPasswordEncoder
     {
         private const string EncryptionKey = "MAKVKKBNI99212";
-        
+
         private byte[] _salt = [0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76];
 
         public string Encode(string password)

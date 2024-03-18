@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WishListBackend.Models;
-using WishListBackend.Other;
+using WishListBackend.Other.Implementation;
+using WishListBackend.Other.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

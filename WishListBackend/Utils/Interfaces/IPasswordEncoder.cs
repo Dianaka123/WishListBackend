@@ -1,4 +1,4 @@
-﻿namespace WishListBackend.Other
+﻿namespace WishListBackend.Other.Interfaces
 {
     public interface IPasswordEncoder
     {

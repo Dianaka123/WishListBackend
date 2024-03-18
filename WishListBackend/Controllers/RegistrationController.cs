@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WishListBackend.Models;
-using WishListBackend.Other;
+using WishListBackend.Other.Interfaces;
 
 namespace WishListBackend.Controllers
 {
@@ -11,21 +11,30 @@ namespace WishListBackend.Controllers
         private readonly ILogger<RegistrationController> _logger;
         private readonly UserContext _userDb;
         private readonly IPasswordEncoder _passwordEncoder;
+        private readonly IRegistrationDataValidator _dataValidator;
 
         public RegistrationController(ILogger<RegistrationController> logger,
             UserContext userDb,
-            IPasswordEncoder passwordEncoder)
+            IPasswordEncoder passwordEncoder,
+            IRegistrationDataValidator dataValidator)
         {
             _logger = logger;
             _userDb = userDb;
             _passwordEncoder = passwordEncoder;
+            _dataValidator = dataValidator;
         }
 
-        public record RegistrationModel(string FirstName, string LastName, string Gender, string Email, string Password, DateTime BirthDate);
+        
         [HttpPost(Name = "Registration")]
         public async Task<IActionResult> RegisterUser(RegistrationModel userData)
         {
+
             var encryptedPassword = _passwordEncoder.Encode(userData.Password);
+
+            if (!_dataValidator.ValidateRegistrationData(userData))
+            {
+                return BadRequest("Registration data is invalid.");
+            }
 
             var user = new User()
             {
@@ -40,6 +49,7 @@ namespace WishListBackend.Controllers
             _userDb.Add(user);
             await _userDb.SaveChangesAsync();
             return Ok();
+
         }
     }
 }
