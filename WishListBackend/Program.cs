@@ -17,6 +17,7 @@ string con = "Server=(localdb)\\mssqllocaldb;Database=usersdbstore;Trusted_Conne
 builder.Services.AddDbContext<UserContext>(options => options.UseSqlServer(con));
 
 builder.Services.AddSingleton<IPasswordEncoder, PasswordEncoder>();
+builder.Services.AddSingleton<IRegistrationDataValidator, RegistrationDataValidator>();
 
 var app = builder.Build();
 

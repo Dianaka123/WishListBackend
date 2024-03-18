@@ -1,10 +1,11 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.Text.RegularExpressions;
 using WishListBackend.Models;
+using WishListBackend.Other.Interfaces;
 
 namespace WishListBackend.Other.Implementation
 {
-    public class RegistrationDataValidator
+    public class RegistrationDataValidator: IRegistrationDataValidator
     {
         private const string nameRegex = "^[A-Z][a-zA-Z]{2,}$";
         private const string emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
@@ -13,12 +14,12 @@ namespace WishListBackend.Other.Implementation
         private const int maxYear = 120;
         private const int minYear = 0;
 
-        public bool ValidateData(RegistrationModel userData)
+        public bool ValidateRegistrationData(RegistrationModel userData)
         {
             var isFirstNameValid = ValidateStringByRegex(userData.FirstName, nameRegex);
             var isLastNameValid = ValidateStringByRegex(userData.LastName, nameRegex);
             var isEmailValid = ValidateStringByRegex(userData.Email, emailRegex);
-            var isPasswordValid = ValidateStringByRegex(userData.Email, passwordRegex);
+            var isPasswordValid = ValidateStringByRegex(userData.Password, passwordRegex);
             var isBirthDateValid = ValidateBirthDate(userData.BirthDate);
             var isGendervalid = !userData.Gender.IsNullOrEmpty();
 
@@ -32,7 +33,7 @@ namespace WishListBackend.Other.Implementation
 
         public bool ValidateBirthDate(DateTime date)
         {
-            var today = new DateTime();
+            var today = DateTime.Today;
             var usersYear = today.Year - date.Year;
 
             return usersYear is <= maxYear and >= minYear && date < today;
