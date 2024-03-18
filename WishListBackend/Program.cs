@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using WishListBackend.Models;
 using WishListBackend.Other.Implementation;
 using WishListBackend.Other.Interfaces;
+using WishListBackend.Utils.Implementation;
+using WishListBackend.Utils.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +20,7 @@ builder.Services.AddDbContext<UserContext>(options => options.UseSqlServer(con))
 
 builder.Services.AddSingleton<IPasswordEncoder, PasswordEncoder>();
 builder.Services.AddSingleton<IRegistrationDataValidator, RegistrationDataValidator>();
+builder.Services.AddSingleton<IUserService, UserService>();
 
 var app = builder.Build();
 
