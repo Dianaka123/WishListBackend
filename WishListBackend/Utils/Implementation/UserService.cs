@@ -16,8 +16,8 @@ namespace WishListBackend.Utils.Implementation
 
         public bool ComparePassword(string passwordEncoded, string password)
         {
-            var decodedPassword = _passwordEncoder.Decode(passwordEncoded);
-            return decodedPassword == password;
+            var userPasswordEncode = _passwordEncoder.Encode(password);
+            return passwordEncoded == userPasswordEncode;
         }
 
         public async Task<bool> CreateUserAsync(User user)

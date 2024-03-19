@@ -20,7 +20,8 @@ builder.Services.AddDbContext<UserContext>(options => options.UseSqlServer(con))
 
 builder.Services.AddSingleton<IPasswordEncoder, PasswordEncoder>();
 builder.Services.AddSingleton<IRegistrationDataValidator, RegistrationDataValidator>();
-builder.Services.AddSingleton<IUserService, UserService>();
+
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 

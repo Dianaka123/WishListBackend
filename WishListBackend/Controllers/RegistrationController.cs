@@ -24,19 +24,23 @@ namespace WishListBackend.Controllers
             _logger = logger;
             _passwordEncoder = passwordEncoder;
             _dataValidator = dataValidator;
-            _userService = _userService;
+            _userService = userService;
         }
 
         
         [HttpPost(Name = "Registration")]
         public async Task<IActionResult> RegisterUser(RegistrationModel userData)
         {
-
             var encryptedPassword = _passwordEncoder.Encode(userData.Password);
 
             if (!_dataValidator.ValidateRegistrationData(userData))
             {
                 return BadRequest("Registration data is invalid.");
+            }
+
+            if(_userService.FindUserByEmail(userData.Email) != null)
+            {
+                return BadRequest("Email exist.");
             }
 
             var user = new User()
@@ -54,5 +58,7 @@ namespace WishListBackend.Controllers
             return Ok();
 
         }
+
+
     }
 }

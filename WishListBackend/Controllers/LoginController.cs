@@ -24,19 +24,19 @@ namespace WishListBackend.Controllers
             _passwordEncoder = passwordEncoder;
         }
 
-        public record LogInData(string email, string password);
+        public record LogInData(string Email, string Password);
 
         [HttpPost(Name = "LogIn")]
         public IActionResult LogIn(LogInData userData)
         {
-            var user = _userService.FindUserByEmail(userData.email);
+            var user = _userService.FindUserByEmail(userData.Email);
 
             if (user == null)
             {
                 return BadRequest("Wrong email.");
             }
 
-            if(!_userService.ComparePassword(user.EncryptedPassword, userData.password))
+            if(!_userService.ComparePassword(user.EncryptedPassword, userData.Password))
             {
                 return BadRequest("Wrong password.");
             }

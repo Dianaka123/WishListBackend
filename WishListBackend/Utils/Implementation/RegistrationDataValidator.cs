@@ -14,13 +14,6 @@ namespace WishListBackend.Other.Implementation
         private const int maxYear = 120;
         private const int minYear = 0;
 
-        private readonly UserContext _userContext;
-
-        public RegistrationDataValidator(UserContext userContext)
-        {
-            _userContext = userContext;
-        }
-
         public bool ValidateRegistrationData(RegistrationModel userData)
         {
             var isFirstNameValid = ValidateStringByRegex(userData.FirstName, nameRegex);
