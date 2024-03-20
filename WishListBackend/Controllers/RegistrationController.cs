@@ -28,7 +28,7 @@ namespace WishListBackend.Controllers
         }
 
         
-        [HttpPost(Name = "Registration")]
+        [HttpPost(Name = "registration")]
         public async Task<IActionResult> RegisterUser(RegistrationModel userData)
         {
             var encryptedPassword = _passwordEncoder.Encode(userData.Password);

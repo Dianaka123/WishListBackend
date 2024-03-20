@@ -1,4 +1,8 @@
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using WishListBackend.JwtAuthentication;
 using WishListBackend.Models;
 using WishListBackend.Other.Implementation;
 using WishListBackend.Other.Interfaces;
@@ -6,6 +10,7 @@ using WishListBackend.Utils.Implementation;
 using WishListBackend.Utils.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
+var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>();
 
 // Add services to the container.
 
@@ -15,11 +20,34 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
 
+builder.Services.AddSingleton(jwtOptions);
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(opts =>
+    {
+        byte[] signingKeyBytes = Encoding.UTF8
+            .GetBytes(jwtOptions.SigningKey);
+
+        opts.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(signingKeyBytes)
+        };
+    });
+
+// 👇 Configuring the Authorization Service
+builder.Services.AddAuthorization();
+
 string con = "Server=(localdb)\\mssqllocaldb;Database=usersdbstore;Trusted_Connection=True;";
 builder.Services.AddDbContext<UserContext>(options => options.UseSqlServer(con));
 
 builder.Services.AddSingleton<IPasswordEncoder, PasswordEncoder>();
 builder.Services.AddSingleton<IRegistrationDataValidator, RegistrationDataValidator>();
+builder.Services.AddSingleton<IJwtLoginService, JwtLoginService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 
@@ -37,6 +65,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.UseAuthentication();
 
 app.MapControllers();
 

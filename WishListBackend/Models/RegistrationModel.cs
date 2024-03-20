@@ -2,7 +2,7 @@
 {
     public record class RegistrationModel()
     {
-        public string FirstName { get; set; } = String.Empty;
+        public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = String.Empty;
         public DateTime BirthDate { get; set; }
         public string Gender { get; set; } = String.Empty;

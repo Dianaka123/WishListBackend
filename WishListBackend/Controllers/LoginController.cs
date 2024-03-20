@@ -11,22 +11,22 @@ namespace WishListBackend.Controllers
     public class LoginController : ControllerBase
     {
         private readonly ILogger<LoginController> _logger;
+        private readonly IJwtLoginService _jwtLoginService;
         private readonly IUserService _userService;
-        private readonly IPasswordEncoder _passwordEncoder;
 
         public LoginController(
             ILogger<LoginController> logger,
             IUserService userService,
-            IPasswordEncoder passwordEncoder)
+            IJwtLoginService jwtLoginService)
         {
             _logger = logger;
             _userService = userService;
-            _passwordEncoder = passwordEncoder;
+            _jwtLoginService = jwtLoginService;
         }
 
         public record LogInData(string Email, string Password);
 
-        [HttpPost(Name = "LogIn")]
+        [HttpPost(Name = "login")]
         public IActionResult LogIn(LogInData userData)
         {
             var user = _userService.FindUserByEmail(userData.Email);
@@ -41,7 +41,9 @@ namespace WishListBackend.Controllers
                 return BadRequest("Wrong password.");
             }
 
-            return Ok();
+            var accessToken = _jwtLoginService.CreateJwt(user.Id.ToString());
+
+            return Ok(accessToken);
         }
     }
 }
