@@ -1,4 +1,4 @@
-﻿using WishListBackend.Models;
+﻿using WishListBackend.Views;
 
 namespace WishListBackend.Other.Interfaces
 {

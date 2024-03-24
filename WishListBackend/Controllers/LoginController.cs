@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WishListBackend.Models;
 using WishListBackend.Other.Interfaces;
 using WishListBackend.Utils.Interfaces;
+using WishListBackend.Views;
 
 namespace WishListBackend.Controllers
 {
@@ -11,23 +12,22 @@ namespace WishListBackend.Controllers
     public class LoginController : ControllerBase
     {
         private readonly ILogger<LoginController> _logger;
-        private readonly IJwtLoginService _jwtLoginService;
+        private readonly IJwtService _jwtLoginService;
         private readonly IUserService _userService;
 
         public LoginController(
             ILogger<LoginController> logger,
             IUserService userService,
-            IJwtLoginService jwtLoginService)
+            IJwtService jwtLoginService)
         {
             _logger = logger;
             _userService = userService;
             _jwtLoginService = jwtLoginService;
         }
 
-        public record LogInData(string Email, string Password);
 
         [HttpPost(Name = "login")]
-        public IActionResult LogIn(LogInData userData)
+        public IActionResult LogIn(LoginModel userData)
         {
             var user = _userService.FindUserByEmail(userData.Email);
 
@@ -38,10 +38,15 @@ namespace WishListBackend.Controllers
 
             if(!_userService.ComparePassword(user.EncryptedPassword, userData.Password))
             {
-                return BadRequest("Wrong password.");
+                return Unauthorized("Wrong password.");
             }
 
-            var accessToken = _jwtLoginService.CreateJwt(user.Id.ToString());
+            if(!user.IsEmailConfirmed) 
+            {
+                return Unauthorized("Invalid Authentication");
+            }
+
+            var accessToken = _jwtLoginService.CreateLoginJwt(user);
 
             return Ok(accessToken);
         }

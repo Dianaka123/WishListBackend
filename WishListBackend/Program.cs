@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using WishListBackend.JwtAuthentication;
 using WishListBackend.Models;
 using WishListBackend.Other.Implementation;
 using WishListBackend.Other.Interfaces;
 using WishListBackend.Utils.Implementation;
 using WishListBackend.Utils.Interfaces;
+using WishListBackend.Views;
 
 var builder = WebApplication.CreateBuilder(args);
+
 var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>();
+var emailConfiguration = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
 
 // Add services to the container.
 
@@ -21,6 +24,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
 
 builder.Services.AddSingleton(jwtOptions);
+builder.Services.AddSingleton(emailConfiguration);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(opts =>
     {
@@ -47,7 +51,10 @@ builder.Services.AddDbContext<UserContext>(options => options.UseSqlServer(con))
 
 builder.Services.AddSingleton<IPasswordEncoder, PasswordEncoder>();
 builder.Services.AddSingleton<IRegistrationDataValidator, RegistrationDataValidator>();
-builder.Services.AddSingleton<IJwtLoginService, JwtLoginService>();
+builder.Services.AddSingleton<IJwtService, JwtService>();
+
+builder.Services.AddSingleton<IEmailService, EmailService>();
+builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<IEmailService>());
 
 builder.Services.AddScoped<IUserService, UserService>();
 

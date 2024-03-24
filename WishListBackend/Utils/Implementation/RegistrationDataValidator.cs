@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.Text.RegularExpressions;
-using WishListBackend.Models;
 using WishListBackend.Other.Interfaces;
+using WishListBackend.Views;
 
 namespace WishListBackend.Other.Implementation
 {

@@ -5,26 +5,47 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
-using WishListBackend.JwtAuthentication;
+using WishListBackend.Models;
 using WishListBackend.Utils.Interfaces;
+using WishListBackend.Views;
 
 namespace WishListBackend.Utils.Implementation
 {
-    public class JwtLoginService : IJwtLoginService
+    public class JwtService : IJwtService
     {
         private readonly JwtOptions _jwtOptions;
 
-        public JwtLoginService(JwtOptions jwtOptions)
+        public JwtService(JwtOptions jwtOptions)
         {
             _jwtOptions = jwtOptions;
         }
 
-        public string CreateJwt(string id)
+        public string CreateConfirmationEmailJwt(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Email, user.EmailAddress)
+            };
+
+            return CreateJwtToken(claims);
+        }
+
+        public string CreateLoginJwt(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim("id", user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.FirstName),
+            };
+
+            return CreateJwtToken(claims);
+        }
+
+        private string CreateJwtToken(List<Claim> claims)
         {
             var signingCredentials = CreateSigningCredentials();
             var expiredDate = DateTime.Now.Add(TimeSpan.FromSeconds(_jwtOptions.ExpirationSeconds));
-
-            var identity = GetIdentity(id);
+            var claimsIdentity = new ClaimsIdentity(claims, "Token");
 
             var jwt = new JwtSecurityToken(
                 issuer: _jwtOptions.Issuer,
@@ -44,18 +65,6 @@ namespace WishListBackend.Utils.Implementation
             var symmetricKey = new SymmetricSecurityKey(keyBytes);
 
             return new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256);
-        }
-
-        private ClaimsIdentity GetIdentity(string id)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim("id", id),
-            };
-            ClaimsIdentity claimsIdentity =
-            new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
-                ClaimsIdentity.DefaultRoleClaimType);
-            return claimsIdentity;
         }
     }
 }
