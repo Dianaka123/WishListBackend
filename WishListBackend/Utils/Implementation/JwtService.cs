@@ -45,7 +45,7 @@ namespace WishListBackend.Utils.Implementation
         {
             var signingCredentials = CreateSigningCredentials();
             var expiredDate = DateTime.Now.Add(TimeSpan.FromSeconds(_jwtOptions.ExpirationSeconds));
-            var claimsIdentity = new ClaimsIdentity(claims, "Token");
+            var identity = new ClaimsIdentity(claims, "Token");
 
             var jwt = new JwtSecurityToken(
                 issuer: _jwtOptions.Issuer,

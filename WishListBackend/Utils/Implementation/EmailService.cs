@@ -15,37 +15,27 @@ namespace WishListBackend.Utils.Implementation
             _configuration = configuration;
         }
 
-        public async Task<bool> SendEmailAsync(Message message)
+        public async Task SendEmailAsync(Message message)
         {
             var mail = CreateMailMessage(message);
-            return await TrySendAsync(mail);
+            await SendAsync(mail);
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            using (var client = new SmtpClient())
-            {
-                try
-                {
-                    await ConnectToStmp(client);
-                    smtpClient = client;
-                }
-                catch
-                {
-                    throw;
-                }
-            }
+            smtpClient = new SmtpClient();
+            await ConnectToStmp(smtpClient);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            using (smtpClient) { 
-                if(smtpClient != null && smtpClient.IsConnected)
-                {
-                    await smtpClient.DisconnectAsync(true);
-                    smtpClient.Dispose();
-                }
+            if(!smtpClient.IsConnected)
+            {
+                return;
             }
+
+            await smtpClient.DisconnectAsync(true);
+            smtpClient.Dispose();
         }
 
         private MimeMessage CreateMailMessage(Message message)
@@ -55,15 +45,14 @@ namespace WishListBackend.Utils.Implementation
             emailMessage.To.Add(message.To);
             emailMessage.Subject = message.Subject;
 
-            var bodyBuilder = new BodyBuilder { HtmlBody = string.Format("<h2>{0}</h2>", message.Content) };
+            var bodyBuilder = new BodyBuilder { HtmlBody = string.Format("<h1>{0}</h1>", message.Content) };
             emailMessage.Body = bodyBuilder.ToMessageBody();
 
             return emailMessage;
         }
 
-        private async Task<bool> TrySendAsync(MimeMessage message)
+        private async Task SendAsync(MimeMessage message)
         {
-            var isSuccess = true;
             try
             {
                 using(smtpClient)
@@ -74,11 +63,8 @@ namespace WishListBackend.Utils.Implementation
             }
             catch
             {
-                isSuccess = false;
                 throw;
             }
-
-            return isSuccess;
         }
 
         private async Task ConnectToStmp(SmtpClient client)

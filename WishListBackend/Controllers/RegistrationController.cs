@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using MimeKit;
 using WishListBackend.Models;
 using WishListBackend.Other.Interfaces;
 using WishListBackend.Utils.Implementation;
@@ -17,19 +18,21 @@ namespace WishListBackend.Controllers
         private readonly IRegistrationDataValidator _dataValidator;
         private readonly IUserService _userService;
         private readonly IJwtService _jwtService;
+        private readonly IEmailService _emailService;
 
         public RegistrationController(ILogger<RegistrationController> logger,
-            UserContext userDb,
             IPasswordEncoder passwordEncoder,
             IRegistrationDataValidator dataValidator,
             IJwtService jwtService,
-            IUserService userService)
+            IUserService userService,
+            IEmailService emailService)
         {
             _logger = logger;
             _passwordEncoder = passwordEncoder;
             _dataValidator = dataValidator;
             _userService = userService;
             _jwtService = jwtService;
+            _emailService = emailService;
         }
 
         //todo: add jwt token.
@@ -60,6 +63,8 @@ namespace WishListBackend.Controllers
                 IsEmailConfirmed = false,
             };
 
+            await _userService.CreateUserAsync(user);
+
             var token = _jwtService.CreateConfirmationEmailJwt(user);
             var param = new Dictionary<string, string?>
             {
@@ -68,13 +73,12 @@ namespace WishListBackend.Controllers
             };
 
             var callback = QueryHelpers.AddQueryString(userData.ClientURL, param);
+            var userEmail = new MailboxAddress("email", user.EmailAddress);
+            var message = new Message(userEmail, "Email confirmation", callback);
 
-            await _userService.CreateUserAsync(user);
-
-            //TODO: Add email confirmation. See example - https://code-maze.com/angular-email-confirmation-aspnet-identity/
+            await _emailService.SendEmailAsync(message);
 
             return Ok();
-
         }
     }
 }
