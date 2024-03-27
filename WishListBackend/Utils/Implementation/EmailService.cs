@@ -24,7 +24,7 @@ namespace WishListBackend.Utils.Implementation
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             smtpClient = new SmtpClient();
-            await ConnectToStmp(smtpClient);
+            await TryConnectToStmp(smtpClient);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
@@ -53,28 +53,20 @@ namespace WishListBackend.Utils.Implementation
 
         private async Task SendAsync(MimeMessage message)
         {
-            try
-            {
-                using(smtpClient)
-                {
-                    await ConnectToStmp(smtpClient);
-                    await smtpClient.SendAsync(message);
-                }
-            }
-            catch
-            {
-                throw;
-            }
+            await TryConnectToStmp(smtpClient);
+            await smtpClient.SendAsync(message);
         }
 
-        private async Task ConnectToStmp(SmtpClient client)
+        private async Task TryConnectToStmp(SmtpClient client)
         {
-            if (!client.IsConnected)
+            if (client.IsConnected)
             {
-                await client.ConnectAsync(_configuration.SmtpServer, _configuration.Port, true);
-                client.AuthenticationMechanisms.Remove("XOAUTH2");
-                await client.AuthenticateAsync(_configuration.UserName, _configuration.Password);
+                return;
             }
+
+            await client.ConnectAsync(_configuration.SmtpServer, _configuration.Port, true);
+            client.AuthenticationMechanisms.Remove("XOAUTH2");
+            await client.AuthenticateAsync(_configuration.UserName, _configuration.Password);
         }
     }
 }
