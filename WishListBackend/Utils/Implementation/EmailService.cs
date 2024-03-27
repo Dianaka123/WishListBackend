@@ -1,5 +1,6 @@
-﻿using MailKit.Net.Smtp;
-using MimeKit;
+﻿using mailslurp.Api;
+using mailslurp.Client;
+using mailslurp.Model;
 using WishListBackend.Utils.Interfaces;
 using WishListBackend.Views;
 
@@ -7,88 +8,39 @@ namespace WishListBackend.Utils.Implementation
 {
     public class EmailService : IEmailService
     {
-        private readonly EmailConfiguration _configuration;
+        private const string API_KEY = "0b690e9331fc38dd15da95ae9ce5c41678a32b567d8a99b6c7be6357b3c5f620";
 
-        private SmtpClient smtpClient;
-        public EmailService(EmailConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
-
-        public async Task<bool> SendEmailAsync(Message message)
-        {
-            var mail = CreateMailMessage(message);
-            return await TrySendAsync(mail);
-        }
+        private InboxControllerApi inboxController;
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            using (var client = new SmtpClient())
-            {
-                try
-                {
-                    await ConnectToStmp(client);
-                    smtpClient = client;
-                }
-                catch
-                {
-                    throw;
-                }
-            }
+            var configuration = new Configuration();
+            configuration.ApiKey.Add("x-api-key", API_KEY);
+            inboxController = new InboxControllerApi(configuration);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            using (smtpClient) { 
-                if(smtpClient != null && smtpClient.IsConnected)
-                {
-                    await smtpClient.DisconnectAsync(true);
-                    smtpClient.Dispose();
-                }
-            }
+            await Task.CompletedTask;
         }
 
-        private MimeMessage CreateMailMessage(Message message)
+        public async Task SendEmailAsync(Message message)
         {
-            var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress("email", _configuration.From));
-            emailMessage.To.Add(message.To);
-            emailMessage.Subject = message.Subject;
+            var emailOptions = CreateEmailOptions(message);
+            var inbox = await inboxController.CreateInboxWithDefaultsAsync();
 
-            var bodyBuilder = new BodyBuilder { HtmlBody = string.Format("<h2>{0}</h2>", message.Content) };
-            emailMessage.Body = bodyBuilder.ToMessageBody();
-
-            return emailMessage;
+            await inboxController.SendEmailAndConfirmAsync(inbox.Id, emailOptions);
         }
 
-        private async Task<bool> TrySendAsync(MimeMessage message)
+        private SendEmailOptions CreateEmailOptions(Message message)
         {
-            var isSuccess = true;
-            try
+            return new SendEmailOptions
             {
-                using(smtpClient)
-                {
-                    await ConnectToStmp(smtpClient);
-                    await smtpClient.SendAsync(message);
-                }
-            }
-            catch
-            {
-                isSuccess = false;
-                throw;
-            }
-
-            return isSuccess;
-        }
-
-        private async Task ConnectToStmp(SmtpClient client)
-        {
-            if (!client.IsConnected)
-            {
-                await client.ConnectAsync(_configuration.SmtpServer, _configuration.Port, true);
-                client.AuthenticationMechanisms.Remove("XOAUTH2");
-                await client.AuthenticateAsync(_configuration.UserName, _configuration.Password);
-            }
+                To = new List<string>() { message.To },
+                Subject = message.Subject,
+                Body = string.Format("<h1>{0}</h1>", message.Content),
+                UseInboxName = true
+            };
         }
     }
 }

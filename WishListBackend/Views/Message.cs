@@ -1,9 +1,6 @@
-﻿using MimeKit;
-using System.Collections;
-
-namespace WishListBackend.Views
+﻿namespace WishListBackend.Views
 {
-    public record Message(MailboxAddress To,
+    public record Message(string To,
         string Subject,
         string Content);
 }
