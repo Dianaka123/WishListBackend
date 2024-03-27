@@ -1,6 +1,9 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Authentication.OAuth;
+using Microsoft.IdentityModel.Tokens;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Principal;
 using System.Text;
 using WishListBackend.Models;
 using WishListBackend.Utils.Interfaces;
@@ -42,7 +45,7 @@ namespace WishListBackend.Utils.Implementation
         {
             var signingCredentials = CreateSigningCredentials();
             var expiredDate = DateTime.Now.Add(TimeSpan.FromSeconds(_jwtOptions.ExpirationSeconds));
-            var identity = new ClaimsIdentity(claims, "Token");
+            var claimsIdentity = new ClaimsIdentity(claims, "Token");
 
             var jwt = new JwtSecurityToken(
                 issuer: _jwtOptions.Issuer,
