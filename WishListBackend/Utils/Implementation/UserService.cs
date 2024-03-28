@@ -28,5 +28,19 @@ namespace WishListBackend.Utils.Implementation
         }
 
         public User? FindUserByEmail(string email) => _userDb.Users.FirstOrDefault(u => u.EmailAddress == email);
+
+        public async Task<bool> TryConfirmEmail(string email)
+        {
+            var user = FindUserByEmail(email);
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.IsEmailConfirmed = true;
+            await _userDb.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

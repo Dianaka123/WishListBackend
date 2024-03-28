@@ -80,5 +80,17 @@ namespace WishListBackend.Controllers
 
             return Ok();
         }
+
+        [HttpGet(Name = "confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
+        {
+            var isSuccess = await _userService.TryConfirmEmail(email);
+            if (!isSuccess)
+            {
+                return BadRequest("Invalid email confirmation request");
+            }
+
+            return Ok();
+        }
     }
 }
