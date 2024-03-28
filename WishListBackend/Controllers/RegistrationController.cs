@@ -3,14 +3,13 @@ using Microsoft.AspNetCore.WebUtilities;
 using MimeKit;
 using WishListBackend.Models;
 using WishListBackend.Other.Interfaces;
-using WishListBackend.Utils.Implementation;
 using WishListBackend.Utils.Interfaces;
 using WishListBackend.Views;
 
 namespace WishListBackend.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/")]
     public class RegistrationController : ControllerBase
     {
         private readonly ILogger<RegistrationController> _logger;
@@ -35,9 +34,7 @@ namespace WishListBackend.Controllers
             _emailService = emailService;
         }
 
-        //todo: add jwt token.
-        
-        [HttpPost(Name = "registration")]
+        [HttpPost("register")]
         public async Task<IActionResult> RegisterUser(RegistrationModel userData)
         {
             var encryptedPassword = _passwordEncoder.Encode(userData.Password);
@@ -47,10 +44,16 @@ namespace WishListBackend.Controllers
                 return BadRequest("Registration data is invalid.");
             }
 
-            if(_userService.FindUserByEmail(userData.Email) != null)
+            _userService.TryDeleteExpiredUser(userData.Email);
+
+            var existedUser = _userService.FindUserByEmail(userData.Email);
+
+            if (existedUser != null)
             {
-                return BadRequest("Email exist.");
+                return BadRequest("Email exist and confirmed.");
             }
+
+            var tokenExpirationDate = DateTime.Now.AddMinutes(_jwtService.DefaultExperationTimeMin);
 
             var user = new User()
             {
@@ -60,7 +63,7 @@ namespace WishListBackend.Controllers
                 Gender = userData.Gender,
                 EmailAddress = userData.Email,
                 EncryptedPassword = encryptedPassword,
-                IsEmailConfirmed = false,
+                ExpirationDate = tokenExpirationDate,
             };
 
             await _userService.CreateUserAsync(user);
@@ -69,7 +72,6 @@ namespace WishListBackend.Controllers
             var param = new Dictionary<string, string?>
             {
                 {"token", token },
-                {"email", user.EmailAddress }
             };
 
             var callback = QueryHelpers.AddQueryString(userData.ClientURL, param);
@@ -81,9 +83,10 @@ namespace WishListBackend.Controllers
             return Ok();
         }
 
-        [HttpGet(Name = "confirm-email")]
-        public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody]string token)
         {
+            var email = _jwtService.GetEmailByToken(token);
             var isSuccess = await _userService.TryConfirmEmail(email);
             if (!isSuccess)
             {

@@ -16,7 +16,7 @@
 
         public DateTime BirthDate { get; set; }
 
-        public bool IsEmailConfirmed { get; set; }
+        public DateTime? ExpirationDate { get; set; }
 
     }
 }

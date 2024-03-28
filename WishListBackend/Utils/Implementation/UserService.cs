@@ -32,15 +32,27 @@ namespace WishListBackend.Utils.Implementation
         public async Task<bool> TryConfirmEmail(string email)
         {
             var user = FindUserByEmail(email);
-            if (user == null)
+            if (user == null || user?.ExpirationDate < DateTime.Now)
             {
                 return false;
             }
 
-            user.IsEmailConfirmed = true;
+            user.ExpirationDate = null;
             await _userDb.SaveChangesAsync();
 
             return true;
+        }
+
+        public async void TryDeleteExpiredUser(string email)
+        {
+            var user = FindUserByEmail(email);
+            if (user == null || user.ExpirationDate > DateTime.Now)
+            {
+                return;
+            }
+
+            _userDb.Remove(user);
+            await _userDb.SaveChangesAsync();
         }
     }
 }

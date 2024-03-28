@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.OAuth;
-using Microsoft.IdentityModel.Tokens;
-using System;
+﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Principal;
 using System.Text;
 using WishListBackend.Models;
 using WishListBackend.Utils.Interfaces;
@@ -14,6 +11,8 @@ namespace WishListBackend.Utils.Implementation
     public class JwtService : IJwtService
     {
         private readonly JwtOptions _jwtOptions;
+
+        public int DefaultExperationTimeMin => _jwtOptions.ExpirationMin;
 
         public JwtService(JwtOptions jwtOptions)
         {
@@ -41,10 +40,22 @@ namespace WishListBackend.Utils.Implementation
             return CreateJwtToken(claims);
         }
 
+        public string GetEmailByToken(string token)
+        {
+            var claims = new JwtSecurityTokenHandler().ReadJwtToken(token).Claims;
+            var emailClaim = claims.FirstOrDefault(e => e.Type == ClaimTypes.Email);
+            if(emailClaim == null)
+            {
+                return "";
+            }
+
+            return emailClaim.Value;
+        }
+
         private string CreateJwtToken(List<Claim> claims)
         {
             var signingCredentials = CreateSigningCredentials();
-            var expiredDate = DateTime.Now.Add(TimeSpan.FromSeconds(_jwtOptions.ExpirationSeconds));
+            var expiredDate = DateTime.Now.Add(TimeSpan.FromMinutes(_jwtOptions.ExpirationMin));
             var identity = new ClaimsIdentity(claims, "Token");
 
             var jwt = new JwtSecurityToken(

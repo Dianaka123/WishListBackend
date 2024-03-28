@@ -1,14 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using WishListBackend.Models;
-using WishListBackend.Other.Interfaces;
+﻿using Microsoft.AspNetCore.Mvc;
 using WishListBackend.Utils.Interfaces;
 using WishListBackend.Views;
 
 namespace WishListBackend.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/")]
     public class LoginController : ControllerBase
     {
         private readonly ILogger<LoginController> _logger;
@@ -26,9 +23,10 @@ namespace WishListBackend.Controllers
         }
 
 
-        [HttpPost(Name = "login")]
+        [HttpPost("login")]
         public IActionResult LogIn(LoginModel userData)
         {
+            _userService.TryDeleteExpiredUser(userData.Email);
             var user = _userService.FindUserByEmail(userData.Email);
 
             if (user == null)
@@ -41,7 +39,7 @@ namespace WishListBackend.Controllers
                 return Unauthorized("Wrong password.");
             }
 
-            if(!user.IsEmailConfirmed) 
+            if(user.ExpirationDate != null) 
             {
                 return Unauthorized("Invalid Authentication");
             }
